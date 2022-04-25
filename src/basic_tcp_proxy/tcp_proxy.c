@@ -8,6 +8,8 @@
 
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 1337
+#define REMOTE_ADDR "127.0.0.1"
+#define REMOTE_PORT 1338
 
 /**
  * @brief Sets up the local listener socket
@@ -68,12 +70,29 @@ int setup_local_listener(int *listen_sock)
 int setup_remote_sock(int *remote_sock)
 {
     int status = 0;
+    struct sockaddr_in remote_addr;
 
     *remote_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (*remote_sock == -1)
     {
         perror("setup_remote_sock: socket");
         return -1;
+    }
+
+    remote_addr.sin_family = AF_INET;
+    status = inet_pton(AF_INET, REMOTE_ADDR, &(remote_addr.sin_addr));
+    if (status != 1)
+    {
+        perror("setup_remote_sock: inet_pton");
+        return -1;
+    }
+    remote_addr.sin_port = htons(REMOTE_PORT);
+
+    status = connect(*remote_sock, (struct sockaddr *)&remote_addr, sizeof(remote_addr));
+    if (status == -1)
+    {
+        perror("setup_remote_sock: connect");
+        return status;
     }
 
     return status;
