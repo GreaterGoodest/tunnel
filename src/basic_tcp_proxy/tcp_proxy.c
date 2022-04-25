@@ -94,6 +94,12 @@ int setup_remote_sock(int *remote_sock)
         perror("setup_remote_sock: connect");
         return status;
     }
+    status = fcntl(*remote_sock, F_SETFL, fcntl(*remote_sock, F_GETFL, 0) | O_NONBLOCK);
+    if (status == -1)
+    {
+        perror("setup_local_listener fnctl");
+        return status;
+    }
 
     return status;
 }
