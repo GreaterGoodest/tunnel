@@ -31,9 +31,15 @@ int setup_local_listener(int *listen_sock)
 
     //Create non-blocking listening socket to receive proxy requrests
     *listen_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (status == -1)
+    if (*listen_sock == -1)
     {
         perror("setup_local_listener socket");
+        return status;
+    }
+    status = setsockopt(*listen_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+    if (status == -1)
+    {
+        perror("setup_local_listener setsockopt");
         return status;
     }
     status = fcntl(*listen_sock, F_SETFL, fcntl(*listen_sock, F_GETFL, 0) | O_NONBLOCK);
@@ -58,26 +64,57 @@ int setup_local_listener(int *listen_sock)
     return status;
 }
 
+
+int setup_remote_sock(int *remote_sock)
+{
+    int status = 0;
+
+    *remote_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (*remote_sock == -1)
+    {
+        perror("setup_remote_sock: socket");
+        return -1;
+    }
+
+    return status;
+}
+
+
+int data_checks(int client_sock, int remote_sock)
+{
+    int status = 0;
+
+    char data[256] = {0};
+    sleep(0.5);
+    read(client_sock, data, sizeof(data)-1);
+    if (strlen(data) > 0)
+    {
+        printf("%s", data);
+    }
+
+    return status;
+}
+
+
 int main(int argc, char **argv)
 {
     int status = 0;
     int listen_sock = 0;  // Receives proxy requests
     int remote_sock = 0;  // Proxy target
     int client_sock = 0;  // Client to proxy
-    int client_addr_len = 0;
     struct sockaddr_in client_addr = {0};
 
     status = setup_local_listener(&listen_sock);
     if (status < 0)
     {
-        puts("Failed to setup local listener.");
+        puts("main: Failed to setup local listener.");
         return 1;
     }
 
     while(1){ 
         if (client_sock <= 0)
         {
-            client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &client_addr_len);
+            client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &(int){0});
             if (client_sock == -1)
             {
                 if (errno != EAGAIN){
@@ -95,11 +132,19 @@ int main(int argc, char **argv)
                 }
             }
         }else {
-            char data[256] = {0};
-            read(client_sock, data, sizeof(data)-1);
-            if (strlen(data) > 0)
+            if (!remote_sock){
+                status = setup_remote_sock(&remote_sock);
+                if (status != 0)
+                {
+                    puts("main: Failed to setup remote socket.");
+                    return 1;
+                }
+            }
+            status = data_checks(client_sock, remote_sock);
+            if (status != 0)
             {
-                printf("%s", data);
+                puts("main: Failed data checks.");
+                return 1;
             }
         }
     }
