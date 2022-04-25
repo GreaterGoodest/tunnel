@@ -2,6 +2,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 
 #define LISTEN_ADDR "127.0.0.1"
@@ -60,7 +62,8 @@ int main(int argc, char **argv)
 {
     int status = 0;
     int listen_sock = 0;  // Receives proxy requests
-    int client_sock = 0;
+    int remote_sock = 0;  // Proxy target
+    int client_sock = 0;  // Client to proxy
     int client_addr_len = 0;
     struct sockaddr_in client_addr = {0};
 
@@ -72,15 +75,32 @@ int main(int argc, char **argv)
     }
 
     while(1){ 
-        client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &client_addr_len);
-        if (client_sock == -1)
+        if (client_sock <= 0)
         {
-            if (errno != EAGAIN){
-                perror("main accept");
-                return errno;
+            client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &client_addr_len);
+            if (client_sock == -1)
+            {
+                if (errno != EAGAIN){
+                    perror("main accept");
+                    return errno;
+                }
+            } else 
+            {
+                puts("accepted");
+                status = fcntl(client_sock, F_SETFL, fcntl(client_sock, F_GETFL, 0) | O_NONBLOCK);
+                if (status == -1)
+                {
+                    perror("main client_sock fnctl");
+                    return status;
+                }
             }
-        }else{
-            puts("accepted");
+        }else {
+            char data[256] = {0};
+            read(client_sock, data, sizeof(data)-1);
+            if (strlen(data) > 0)
+            {
+                printf("%s", data);
+            }
         }
     }
 
