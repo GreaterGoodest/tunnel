@@ -114,7 +114,8 @@ int data_checks(int client_sock, int remote_sock)
     read(client_sock, data, sizeof(data)-1);
     if (strlen(data) > 0)
     {
-        printf("%s", data);
+        write(remote_sock, data, strlen(data)+1);
+        memset(data, 0, sizeof(data));
     }
 
     return status;
