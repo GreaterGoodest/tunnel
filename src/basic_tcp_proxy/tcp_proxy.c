@@ -117,6 +117,12 @@ int data_checks(int client_sock, int remote_sock)
         write(remote_sock, data, strlen(data)+1);
         memset(data, 0, sizeof(data));
     }
+    read(remote_sock, data, sizeof(data)-1);
+    if (strlen(data) > 0)
+    {
+        write(client_sock, data, strlen(data)+1);
+        memset(data, 0, sizeof(data));
+    }
 
     return status;
 }
