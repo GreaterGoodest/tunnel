@@ -11,7 +11,7 @@
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 1337
 #define REMOTE_ADDR "127.0.0.1"
-#define REMOTE_PORT 1338
+#define REMOTE_PORT 1338 
 #define MAX_TCP 64 * KB
 
 /**
@@ -114,13 +114,13 @@ int data_checks(int client_sock, int remote_sock)
 
     char data[MAX_TCP] = {0};
     sleep(0.5);
-    read(client_sock, data, sizeof(data)-1);
+    status = read(client_sock, data, sizeof(data)-1);
     if (strlen(data) > 0)
     {
         write(remote_sock, data, strlen(data)+1);
         memset(data, 0, sizeof(data));
     }
-    read(remote_sock, data, sizeof(data)-1);
+    status = read(remote_sock, data, sizeof(data)-1);
     if (strlen(data) > 0)
     {
         write(client_sock, data, strlen(data)+1);
@@ -176,10 +176,16 @@ int main(int argc, char **argv)
                 }
             }
             status = data_checks(client_sock, remote_sock);
-            if (status != 0)
+            if (status < 0 && errno != EAGAIN)
             {
                 puts("main: Failed data checks.");
                 return 1;
+            }else if (status == 0){
+                puts("connection closed");
+                close(client_sock);
+                close(remote_sock);
+                client_sock = 0;
+                remote_sock = 0;
             }
         }
     }
