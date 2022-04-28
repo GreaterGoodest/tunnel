@@ -6,10 +6,13 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#define KB 1024
+
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 1337
 #define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT 1338
+#define MAX_TCP 64 * KB
 
 /**
  * @brief Sets up the local listener socket
@@ -109,7 +112,7 @@ int data_checks(int client_sock, int remote_sock)
 {
     int status = 0;
 
-    char data[256] = {0};
+    char data[MAX_TCP] = {0};
     sleep(0.5);
     read(client_sock, data, sizeof(data)-1);
     if (strlen(data) > 0)
