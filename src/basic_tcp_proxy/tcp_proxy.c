@@ -69,7 +69,12 @@ int setup_local_listener(int *listen_sock)
     return status;
 }
 
-
+/**
+ * @brief Set up the remote socket
+ * 
+ * @param remote_sock target socket to proxy traffic to
+ * @return int error code
+ */
 int setup_remote_sock(int *remote_sock)
 {
     int status = 0;
@@ -107,7 +112,13 @@ int setup_remote_sock(int *remote_sock)
     return status;
 }
 
-
+/**
+ * @brief Checks for new data from client/server
+ * 
+ * @param client_sock connected client socket
+ * @param remote_sock socket connection to target host
+ * @return int error code
+ */
 int data_checks(int client_sock, int remote_sock)
 {
     int status = 0;
