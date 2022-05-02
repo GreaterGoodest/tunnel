@@ -11,7 +11,7 @@
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 1337
 #define REMOTE_ADDR "127.0.0.1"
-#define REMOTE_PORT 1338 
+#define REMOTE_PORT 1338
 #define MAX_TCP 64 * KB
 
 /**
@@ -45,12 +45,6 @@ int setup_local_listener(int *listen_sock)
     if (status == -1)
     {
         perror("setup_local_listener setsockopt");
-        return status;
-    }
-    status = fcntl(*listen_sock, F_SETFL, fcntl(*listen_sock, F_GETFL, 0) | O_NONBLOCK);
-    if (status == -1)
-    {
-        perror("setup_local_listener fnctl");
         return status;
     }
     status = bind(*listen_sock, (struct sockaddr *)&listen_addr, sizeof(listen_addr));
@@ -124,7 +118,6 @@ int data_checks(int client_sock, int remote_sock)
     int status = 0;
 
     char data[MAX_TCP] = {0};
-    sleep(0.5);
     status = read(client_sock, data, sizeof(data)-1);
     if (strlen(data) > 0)
     {
