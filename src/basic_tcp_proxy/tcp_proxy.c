@@ -12,7 +12,7 @@
 #define LISTEN_PORT 1337
 #define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT 1338
-#define MAX_TCP 64 * KB
+#define MAX_TCP 1 * KB
 
 /**
  * @brief Sets up the local listener socket
@@ -34,7 +34,7 @@ int setup_local_listener(int *listen_sock)
     }
     listen_addr.sin_port = htons(LISTEN_PORT);
 
-    //Create non-blocking listening socket to receive proxy requrests
+    //Create listening socket to receive proxy requests
     *listen_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (*listen_sock == -1)
     {
