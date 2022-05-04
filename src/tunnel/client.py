@@ -19,6 +19,17 @@ def connect_to_server() -> socket.socket:
 
 def listen_local():
     """Listen for local data to tunnel."""
+    local_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    local_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        local_listener.bind((LOCAL_ADDR, LOCAL_PORT))
+    except:
+        print('Unable to bind listener')
+        return None
+    local_listener.listen(5)
+    local_conn, _ = local_listener.accept()
+    print('Received local connection')
+    return local_conn
 
 def tunnel_loop(remote_conn: socket.socket):
     """Main tunnel traffic exchange loop."""
@@ -28,7 +39,9 @@ def init(dest: int):
     remote_conn = connect_to_server()
     if not remote_conn:
         return
-    listen_local()
+    local_conn = listen_local()
+    if not local_conn:
+        return
     tunnel_loop(remote_conn)
 
 
