@@ -8,55 +8,49 @@
 
 #define KB 1024
 
-#define LISTEN_ADDR "127.0.0.1"
-#define LISTEN_PORT 1337
+#define CLIENT_ADDR "127.0.0.1"
+#define CLIENT_PORT 1337
 #define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT 1338
 #define MAX_TCP 1 * KB
 
 /**
- * @brief Sets up the local listener socket
+ * @brief Sets up the client socket
  * 
- * @param listen_sock pointer to socket fd to setup
+ * @param client_sock pointer to socket fd to setup
  * @return int error code
  */
-int setup_local_listener(int *listen_sock)
+int setup_client_conn(int *client_sock)
 {
     int status = 0;
-    struct sockaddr_in listen_addr = {0};
+    struct sockaddr_in client_addr;
 
-    listen_addr.sin_family = AF_INET;
-    status = inet_pton(AF_INET, LISTEN_ADDR, &(listen_addr.sin_addr));
-    if (status != 1)
+    *client_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (*client_sock == -1)
     {
-        perror("setup_local_listener inet_pton");
+        perror("setup_client_sock: socket");
         return -1;
     }
-    listen_addr.sin_port = htons(LISTEN_PORT);
 
-    //Create listening socket to receive proxy requests
-    *listen_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (*listen_sock == -1)
+    client_addr.sin_family = AF_INET;
+    status = inet_pton(AF_INET, CLIENT_ADDR, &(client_addr.sin_addr));
+    if (status != 1)
     {
-        perror("setup_local_listener socket");
-        return status;
+        perror("setup_client_sock: inet_pton");
+        return -1;
     }
-    status = setsockopt(*listen_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+    client_addr.sin_port = htons(CLIENT_PORT);
+
+    status = connect(*client_sock, (struct sockaddr *)&client_addr, sizeof(client_addr));
     if (status == -1)
     {
-        perror("setup_local_listener setsockopt");
+        perror("setup_client_sock: connect");
         return status;
     }
-    status = bind(*listen_sock, (struct sockaddr *)&listen_addr, sizeof(listen_addr));
+    status = fcntl(*client_sock, F_SETFL, fcntl(*client_sock, F_GETFL, 0) | O_NONBLOCK);
     if (status == -1)
     {
-        perror("setup_local_listener bind");
-        return status;
-    }
-    status = listen(*listen_sock, SOMAXCONN);
-    if (status == -1)
-    {
-        perror("setup_local_listener listen");
+        perror("setup_client_sock fnctl");
         return status;
     }
 
@@ -138,12 +132,11 @@ int data_checks(int client_sock, int remote_sock)
 int main(int argc, char **argv)
 {
     int status = 0;
-    int listen_sock = 0;  // Receives proxy requests
+    int client_sock = 0;  // Receives proxy requests
     int remote_sock = 0;  // Proxy target
-    int client_sock = 0;  // Client to proxy
-    struct sockaddr_in client_addr = {0};
+    struct sockaddr_in conn_addr = {0};
 
-    status = setup_local_listener(&listen_sock);
+    status = setup_client_conn(&client_sock);
     if (status < 0)
     {
         puts("main: Failed to setup local listener.");
@@ -151,26 +144,6 @@ int main(int argc, char **argv)
     }
 
     while(1){ 
-        if (client_sock <= 0)
-        {
-            client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &(int){0});
-            if (client_sock == -1)
-            {
-                if (errno != EAGAIN){
-                    perror("main accept");
-                    return errno;
-                }
-            } else 
-            {
-                puts("accepted");
-                status = fcntl(client_sock, F_SETFL, fcntl(client_sock, F_GETFL, 0) | O_NONBLOCK);
-                if (status == -1)
-                {
-                    perror("main client_sock fnctl");
-                    return status;
-                }
-            }
-        }else {
             if (!remote_sock){
                 status = setup_remote_sock(&remote_sock);
                 if (status != 0)
@@ -191,7 +164,6 @@ int main(int argc, char **argv)
                 client_sock = 0;
                 remote_sock = 0;
             }
-        }
     }
 
     return 0;

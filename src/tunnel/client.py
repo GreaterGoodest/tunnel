@@ -9,16 +9,20 @@ REMOTE_PORT = 1337
 KB = 1024
 DATA_SIZE = 1 * KB
 
-def connect_to_server() -> socket.socket:
-    """Connect to remote server for tunneling."""
-    remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def listen_for_server() -> socket.socket:
+    """Listen for remote server connection."""
+    remote_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    remote_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
-        remote_conn.connect((REMOTE_ADDR, REMOTE_PORT))
-    except ConnectionRefusedError:
-        print(f'Server at {REMOTE_ADDR}:{REMOTE_PORT} is not available.')
+        remote_listener.bind((REMOTE_ADDR, REMOTE_PORT))
+    except:
+        print('Unable to bind listener')
         return None
-    print(f'Successfullly connect to remote server at {REMOTE_ADDR}:{REMOTE_PORT}.')
-    return remote_conn
+    remote_listener.listen(5)
+    local_conn, _ = remote_listener.accept()
+    print('Received remote connection')
+    return local_conn
+
 
 def listen_local() -> socket.socket:
     """Listen for local data to tunnel."""
@@ -55,7 +59,7 @@ def tunnel_loop(local_conn: socket.socket, remote_conn: socket.socket) -> None:
 
 def init(dest: int):
     """Tunnel setup and initialization."""
-    remote_conn = connect_to_server()
+    remote_conn = listen_for_server()
     if not remote_conn:
         return
     remote_conn.setblocking(0)
