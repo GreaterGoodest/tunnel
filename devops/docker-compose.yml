@@ -2,7 +2,8 @@ services:
   web:
     build: ./web/
     networks:
-      - private
+      private:
+        ipv4_address: 172.21.0.3
     ports:
       - "80"
     command: python -m http.server 80
@@ -11,8 +12,13 @@ services:
   host:
     image: alpine:latest
     networks:
-      - private
+      private:
+        ipv4_address: 172.21.0.2
     command: nc -lp 31337
 
 networks:
   private:
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+          gateway: 172.21.0.1
