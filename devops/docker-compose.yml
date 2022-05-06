@@ -1,8 +1,18 @@
 services:
   web:
     build: ./web/
+    networks:
+      - private
     ports:
-      - "8000:80"
+      - "80"
     command: python -m http.server 80
     volumes:
       - ./web/contents/:/var/www/html/
+  host:
+    image: alpine:latest
+    networks:
+      - private
+    command: nc -lp 31337
+
+networks:
+  private:
