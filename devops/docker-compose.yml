@@ -10,7 +10,7 @@ services:
     volumes:
       - ./web/contents/:/var/www/html/
   host:
-    image: alpine:latest
+    build: ./host1/
     networks:
       private:
         ipv4_address: 172.21.0.2
