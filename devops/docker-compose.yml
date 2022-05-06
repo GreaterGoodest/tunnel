@@ -1,8 +1,8 @@
 services:
   web:
-    image: python:3.10.4-alpine3.14
+    build: ./web/
     ports:
       - "8000:80"
-    command: sh -c 'cd /var/www/html && pip install simple_http_server && python -m http.server 80'
+    command: python -m http.server 80
     volumes:
       - .:/var/www/html/
