@@ -8,10 +8,10 @@
 
 #define KB 1024
 
-#define CLIENT_ADDR "127.0.0.1"
+#define CLIENT_ADDR "172.21.1.3"
 #define CLIENT_PORT 1337
-#define REMOTE_ADDR "127.0.0.1"
-#define REMOTE_PORT 1338
+#define REMOTE_ADDR "172.21.0.3"
+#define REMOTE_PORT 1337
 #define MAX_TCP 1 * KB
 
 /**
