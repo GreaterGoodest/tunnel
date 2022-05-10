@@ -150,47 +150,43 @@ int main()
         return 1;
     }
 
-    while(1){ 
-        if (client_sock <= 0)
+    client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &(int){0});
+    if (client_sock == -1)
+    {
+        if (errno != EAGAIN){
+            perror("main accept");
+            return errno;
+        }
+    } else 
+    {
+        puts("accepted");
+        status = fcntl(client_sock, F_SETFL, fcntl(client_sock, F_GETFL, 0) | O_NONBLOCK);
+        if (status == -1)
         {
-            client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &(int){0});
-            if (client_sock == -1)
-            {
-                if (errno != EAGAIN){
-                    perror("main accept");
-                    return errno;
-                }
-            } else 
-            {
-                puts("accepted");
-                status = fcntl(client_sock, F_SETFL, fcntl(client_sock, F_GETFL, 0) | O_NONBLOCK);
-                if (status == -1)
-                {
-                    perror("main client_sock fnctl");
-                    return status;
-                }
-            }
-        }else {
-            if (!remote_sock){
-                status = setup_remote_sock(&remote_sock);
-                if (status != 0)
-                {
-                    puts("main: Failed to setup remote socket.");
-                    return 1;
-                }
-            }
-            status = data_checks(client_sock, remote_sock);
-            if (status < 0 && errno != EAGAIN)
-            {
-                puts("main: Failed data checks.");
-                return 1;
-            }else if (status == 0){
-                puts("connection closed");
-                close(client_sock);
-                close(remote_sock);
-                client_sock = 0;
-                remote_sock = 0;
-            }
+            perror("main client_sock fnctl");
+            return status;
+        }
+    }
+
+    status = setup_remote_sock(&remote_sock);
+    if (status != 0)
+    {
+        puts("main: Failed to setup remote socket.");
+        return 1;
+    }
+
+    while(1){ 
+        status = data_checks(client_sock, remote_sock);
+        if (status < 0 && errno != EAGAIN)
+        {
+            puts("main: Failed data checks.");
+            return 1;
+        }else if (status == 0){
+            puts("connection closed");
+            close(client_sock);
+            close(remote_sock);
+            client_sock = 0;
+            remote_sock = 0;
         }
     }
 
