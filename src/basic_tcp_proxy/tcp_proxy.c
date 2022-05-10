@@ -135,7 +135,7 @@ int data_checks(int client_sock, int remote_sock)
 }
 
 
-int main(int argc, char **argv)
+int main()
 {
     int status = 0;
     int listen_sock = 0;  // Receives proxy requests
