@@ -143,15 +143,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    status = setup_remote_sock(&remote_sock);
+    if (status != 0)
+    {
+        puts("main: Failed to setup remote socket.");
+        return 1;
+    }
+
     while(1){ 
-            if (!remote_sock){
-                status = setup_remote_sock(&remote_sock);
-                if (status != 0)
-                {
-                    puts("main: Failed to setup remote socket.");
-                    return 1;
-                }
-            }
             status = data_checks(client_sock, remote_sock);
             if (status < 0 && errno != EAGAIN)
             {

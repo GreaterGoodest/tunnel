@@ -57,7 +57,7 @@ def tunnel_loop(local_conn: socket.socket, remote_conn: socket.socket) -> None:
             local_conn.send(data)
         data = None
 
-def init(dest: int):
+def init():
     """Tunnel setup and initialization."""
     remote_conn = listen_for_server()
     if not remote_conn:
@@ -72,7 +72,4 @@ def init(dest: int):
 
 
 if __name__ == "__main__":
-    dest_select = 1
-    if len(sys.argv) > 1:
-        dest_select = sys.argv[1]
-    init(dest_select)
+    init()
